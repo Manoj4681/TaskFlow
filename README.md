@@ -34,20 +34,19 @@ This project is a **serverless application** that runs entirely in the browser w
 
 ---
 
-## 🛠️ Technology Stack
+## 🏃 How to Run
 
-* **Frontend:** Semantic HTML5, CSS3 Variables, CSS Grid, and Flexbox layouts.
-* **Interactivity:** Vanilla JavaScript (ES6+), DOM APIs.
-* **Web APIs Used:** Web Storage API (`localStorage`), Web Audio API, and Web Notifications API.
-* **Typography:** Inter Google Font.
-
----
-
-<details>
-<summary>📁 File Directory</summary>
-TaskFlow/ │ ├── index.html 🏠 Landing / Home portal ├── todo.html ✅ Deep Work Workspace ├── calendar.html 📅 Monthly Calendar planner ├── signin.html 🔑 Sign In portal ├── signup.html 🚀 Sign Up portal ├── about.html ℹ️ Mission & Story view ├── pricing.html 💎 Pricing tiers & FAQ │ ├── style.css 🎨 Centralized Design System └── nav.js 🔗 Shared Sidebar Navigation & Toast system
-
-
-
-
-</details>
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Manoj4681/TaskFlow.git
+   2. Navigate to the project directory:
+   ```bash
+   cd TaskFlow
+   3.Open index.html in your browser.
+   🛠️ Technology Stack
+Frontend: Semantic HTML5, CSS3 Variables, CSS Grid, and Flexbox layouts.
+Interactivity: Vanilla JavaScript (ES6+), DOM APIs.
+Web APIs Used: Web Storage API (localStorage), Web Audio API, and Web Notifications API.
+Typography: Inter Google Font.
+📁 File Directory
+```
