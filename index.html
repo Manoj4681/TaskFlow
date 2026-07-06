@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow — Stay Organized, Stay Ahead</title>
+  <meta name="description" content="TaskFlow is a premium task manager that helps you organize your life, boost productivity, and never miss a deadline.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Landing-specific styles ── */
+    body { overflow-x: hidden; }
+
+    /* Fullpage hero without sidebar */
+    .landing-nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 3rem;
+      background: rgba(13,15,26,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .landing-nav .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.15rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .landing-nav .logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; box-shadow: var(--shadow-glow);
+    }
+
+    .landing-nav .nav-links { display: flex; align-items: center; gap: 0.25rem; }
+    .landing-nav .nav-links a {
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-2);
+      transition: var(--transition);
+    }
+    .landing-nav .nav-links a:hover { color: var(--text); background: var(--surface); }
+    .landing-nav .nav-cta { display: flex; gap: 0.5rem; align-items: center; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 7rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.18) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 40% at 80% 80%, rgba(139,92,246,0.12) 0%, transparent 60%);
+    }
+
+    /* floating blobs */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.12;
+      animation: blobFloat 8s ease-in-out infinite;
+    }
+    .blob-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; left: -100px; }
+    .blob-2 { width: 350px; height: 350px; background: var(--accent); bottom: -80px; right: -80px; animation-delay: -4s; }
+    .blob-3 { width: 250px; height: 250px; background: #3b82f6; top: 40%; left: 60%; animation-delay: -2s; }
+
+    @keyframes blobFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(20px, -20px) scale(1.05); }
+      66%       { transform: translate(-15px, 15px) scale(0.97); }
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 780px; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.35rem 1rem;
+      border-radius: 99px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.3);
+      font-size: 0.78rem; font-weight: 600; color: var(--accent-2);
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .hero-badge span { width: 6px; height: 6px; background: var(--accent-2); border-radius: 50%; animation: pulse-glow 2s infinite; }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      animation: fadeInUp 0.6s 0.1s ease both;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-2);
+      margin-top: 1.25rem;
+      max-width: 540px;
+      margin-left: auto; margin-right: auto;
+      line-height: 1.7;
+      animation: fadeInUp 0.6s 0.2s ease both;
+    }
+
+    .hero-cta {
+      display: flex; gap: 1rem; justify-content: center; align-items: center;
+      margin-top: 2rem; flex-wrap: wrap;
+      animation: fadeInUp 0.6s 0.3s ease both;
+    }
+
+    .btn-hero-primary {
+      padding: 0.85rem 2.25rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff; font-weight: 700; font-size: 0.95rem;
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px var(--primary-glow);
+      transition: var(--transition);
+    }
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px var(--primary-glow); }
+
+    .btn-hero-secondary {
+      padding: 0.85rem 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text); font-weight: 600; font-size: 0.95rem;
+      border-radius: var(--radius);
+      transition: var(--transition);
+    }
+    .btn-hero-secondary:hover { border-color: var(--border-hover); background: var(--surface-2); }
+
+    .hero-stats {
+      display: flex; gap: 2.5rem; justify-content: center;
+      margin-top: 3rem;
+      animation: fadeInUp 0.6s 0.4s ease both;
+    }
+
+    .hero-stat .num {
+      font-size: 1.8rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-stat .lbl { font-size: 0.75rem; color: var(--text-3); margin-top: 2px; }
+
+    /* ── Preview Window ── */
+    .hero-preview {
+      max-width: 700px; margin: 3rem auto 0;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 60px rgba(99,102,241,0.1);
+      animation: fadeInUp 0.7s 0.5s ease both;
+    }
+
+    .preview-toolbar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0.75rem 1rem;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red    { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green  { background: #10b981; }
+
+    .preview-url {
+      flex: 1; margin: 0 0.75rem;
+      background: var(--surface);
+      border-radius: 6px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.72rem; color: var(--text-3);
+    }
+
+    .preview-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .preview-task {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+    }
+
+    .preview-check {
+      width: 16px; height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .preview-check.done { background: var(--primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; }
+    .preview-check.todo { border: 2px solid var(--border); }
+
+    .preview-task-text.done { text-decoration: line-through; color: var(--text-3); }
+    .preview-tag { margin-left: auto; }
+    .preview-progress {
+      margin-top: 0.5rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.75rem; color: var(--text-3);
+    }
+
+    /* ── Features ── */
+    .section { padding: 5rem 2rem; }
+    .section-center { text-align: center; max-width: 1100px; margin: 0 auto; }
+
+    .section-eyebrow {
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-heading {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800; letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .section-sub {
+      font-size: 1rem; color: var(--text-2);
+      max-width: 500px; margin: 0.75rem auto 0;
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 3rem;
+      text-align: left;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: var(--transition);
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .feature-card p  { font-size: 0.85rem; color: var(--text-2); line-height: 1.6; }
+
+    /* ── Stats Banner ── */
+    .stats-banner {
+      background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: var(--radius-xl);
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 2rem;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .stats-banner .num { font-size: 2.2rem; font-weight: 900; }
+    .stats-banner .lbl { font-size: 0.8rem; color: var(--text-3); margin-top: 4px; }
+
+    /* ── CTA Section ── */
+    .cta-section {
+      text-align: center;
+      padding: 5rem 2rem;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(99,102,241,0.12) 0%, transparent 70%);
+    }
+
+    .cta-section h2 { font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.02em; }
+    .cta-section p  { font-size: 1rem; color: var(--text-2); margin: 0.75rem auto 0; max-width: 440px; line-height: 1.7; }
+    .cta-section .cta-btns { display: flex; gap: 1rem; justify-content: center; margin-top: 1.75rem; flex-wrap: wrap; }
+
+    /* ── Footer ── */
+    .landing-footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+
+    .landing-footer .logo {
+      font-size: 0.95rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--accent-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .landing-footer p { font-size: 0.8rem; color: var(--text-3); }
+
+    .footer-links { display: flex; gap: 1.25rem; }
+    .footer-links a { font-size: 0.8rem; color: var(--text-3); transition: var(--transition); }
+    .footer-links a:hover { color: var(--text); }
+
+    @media (max-width: 640px) {
+      .landing-nav { padding: 0.85rem 1.25rem; }
+      .landing-nav .nav-links { display: none; }
+      .hero-stats { gap: 1.25rem; }
+      .stats-banner { grid-template-columns: repeat(2, 1fr); }
+      .landing-footer { flex-direction: column; align-items: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<nav class="landing-nav" id="landing-nav">
+  <a href="index.html" class="logo">
+    <div class="logo-icon">⚡</div>
+    TaskFlow
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="todo.html">Tasks</a>
+    <a href="calendar.html">Calendar</a>
+    <a href="about.html">About</a>
+    <a href="pricing.html">Pricing</a>
+  </div>
+  <div class="nav-cta">
+    <a href="signin.html" class="btn btn-secondary btn-sm">Sign In</a>
+    <a href="signup.html" class="btn btn-primary btn-sm">Get Started</a>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span></span> Now with Pomodoro Timer &amp; Calendar View
+    </div>
+
+    <h1>
+      The Task Manager<br>
+      <span class="gradient-text">Built for Flow State</span>
+    </h1>
+
+    <p>
+      Organize tasks, beat deadlines, and unlock your peak productivity —
+      all in one sleek, distraction-free workspace.
+    </p>
+
+    <div class="hero-cta">
+      <a href="signup.html" class="btn-hero-primary">🚀 Get Started Free</a>
+      <a href="todo.html" class="btn-hero-secondary">See it in action →</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="num" data-target="12000">0</div>
+        <div class="lbl">Tasks Completed</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" data-target="3400">0</div>
+        <div class="lbl">Active Users</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" data-target="98">0</div>
+        <div class="lbl">% Satisfaction</div>
+      </div>
+    </div>
+
+    <!-- App Preview Mock -->
+    <div class="hero-preview">
+      <div class="preview-toolbar">
+        <div class="preview-dot dot-red"></div>
+        <div class="preview-dot dot-yellow"></div>
+        <div class="preview-dot dot-green"></div>
+        <div class="preview-url">taskflow.app/todo</div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-task">
+          <div class="preview-check done">✓</div>
+          <span class="preview-task-text done">Design the landing page</span>
+          <span class="preview-tag"><span class="badge badge-work">Work</span></span>
+        </div>
+        <div class="preview-task">
+          <div class="preview-check todo"></div>
+          <span class="preview-task-text">Finish quarterly report</span>
+          <span class="preview-tag"><span class="badge badge-urgent">Urgent</span></span>
+        </div>
+        <div class="preview-task">
+          <div class="preview-check todo"></div>
+          <span class="preview-task-text">Read 30 pages of Deep Work</span>
+          <span class="preview-tag"><span class="badge badge-learning">Learning</span></span>
+        </div>
+        <div class="preview-task">
+          <div class="preview-check done">✓</div>
+          <span class="preview-task-text done">Morning workout</span>
+          <span class="preview-tag"><span class="badge badge-personal">Personal</span></span>
+        </div>
+        <div class="preview-progress">
+          <span>2 of 4 tasks done</span>
+          <div style="flex:1">
+            <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+          </div>
+          <span>50%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="section" style="background: var(--bg-2);">
+  <div class="section-center">
+    <div class="section-eyebrow">Features</div>
+    <h2 class="section-heading">Everything you need to <span class="gradient-text">stay in control</span></h2>
+    <p class="section-sub">TaskFlow packs powerful tools into a clean interface so you can focus on doing, not managing.</p>
+
+    <div class="features-grid">
+      <div class="feature-card anim-fade-up">
+        <div class="feature-icon" style="background:rgba(99,102,241,0.12)">✅</div>
+        <h3>Smart Task Management</h3>
+        <p>Create tasks with priorities, tags, due dates, and notes. Filter, sort, and search in real time.</p>
+      </div>
+      <div class="feature-card anim-fade-up delay-1">
+        <div class="feature-icon" style="background:rgba(16,185,129,0.12)">📅</div>
+        <h3>Calendar Integration</h3>
+        <p>See tasks on a monthly calendar with color-coded dots. Click any day to add or manage tasks.</p>
+      </div>
+      <div class="feature-card anim-fade-up delay-2">
+        <div class="feature-icon" style="background:rgba(245,158,11,0.12)">🍅</div>
+        <h3>Pomodoro Timer</h3>
+        <p>Built-in focus timer with a visual circular progress ring to keep you in deep work mode.</p>
+      </div>
+      <div class="feature-card anim-fade-up delay-3">
+        <div class="feature-icon" style="background:rgba(59,130,246,0.12)">📝</div>
+        <h3>Quick Notes</h3>
+        <p>Jot down ideas instantly with an autosaving notes panel — always just one click away.</p>
+      </div>
+      <div class="feature-card anim-fade-up delay-4">
+        <div class="feature-icon" style="background:rgba(239,68,68,0.12)">🔥</div>
+        <h3>Priority System</h3>
+        <p>Color-coded High, Medium, and Low priorities so the most important work always stands out.</p>
+      </div>
+      <div class="feature-card anim-fade-up delay-5">
+        <div class="feature-icon" style="background:rgba(139,92,246,0.12)">💾</div>
+        <h3>Offline & Local Storage</h3>
+        <p>All your tasks are saved locally — works offline, no account required to get started.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Banner -->
+<section class="section">
+  <div class="section-center">
+    <div class="stats-banner">
+      <div>
+        <div class="num gradient-text">12K+</div>
+        <div class="lbl">Tasks Completed Today</div>
+      </div>
+      <div>
+        <div class="num gradient-text">3.4K</div>
+        <div class="lbl">Happy Users</div>
+      </div>
+      <div>
+        <div class="num gradient-text">98%</div>
+        <div class="lbl">Satisfaction Rate</div>
+      </div>
+      <div>
+        <div class="num gradient-text">4.9★</div>
+        <div class="lbl">Average Rating</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <h2>Ready to take <span class="gradient-text">control</span> of your day?</h2>
+  <p>Join thousands of productive people already using TaskFlow. Free forever.</p>
+  <div class="cta-btns">
+    <a href="signup.html" class="btn-hero-primary">🚀 Start for Free</a>
+    <a href="pricing.html" class="btn-hero-secondary">See Pricing →</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="landing-footer">
+  <div class="logo">⚡ TaskFlow</div>
+  <p>© <span id="footer-year"></span> TaskFlow. Built with ❤️ for productivity.</p>
+  <div class="footer-links">
+    <a href="about.html">About</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="signin.html">Sign In</a>
+    <a href="signup.html">Sign Up</a>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  /* Animated counter */
+  const counters = document.querySelectorAll('[data-target]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.dataset.target);
+      const suffix = target >= 100 ? (target > 1000 ? 'K+' : '%') : '';
+      const display = target > 1000 ? target / 1000 : target;
+      let current = 0;
+      const step = display / 60;
+      const timer = setInterval(() => {
+        current = Math.min(current + step, display);
+        el.textContent = (current >= display - step)
+          ? (target > 1000 ? display.toFixed(1) : display) + suffix
+          : (target > 1000 ? current.toFixed(1) : Math.floor(current)) + suffix;
+        if (current >= display) clearInterval(timer);
+      }, 16);
+      observer.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(c => observer.observe(c));
+</script>
+
+</body>
+</html>

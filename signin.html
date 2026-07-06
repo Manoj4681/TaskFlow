@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — TaskFlow</title>
+  <meta name="description" content="Sign in to TaskFlow and access your tasks from anywhere.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
+
+    /* Ambient bg */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 70% 60% at 30% 20%, rgba(99,102,241,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.12) 0%, transparent 60%),
+        var(--bg);
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 32px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04);
+      animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    .auth-logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .auth-logo .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+
+    .auth-logo .logo-text {
+      font-size: 1.15rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .auth-heading  { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+    .auth-subheading { font-size: 0.85rem; color: var(--text-3); margin-bottom: 1.75rem; }
+
+    /* Input wrapper with eye toggle */
+    .input-wrapper { position: relative; }
+    .input-wrapper .input { padding-right: 2.5rem; }
+    .eye-toggle {
+      position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-3); font-size: 1rem;
+      transition: var(--transition);
+    }
+    .eye-toggle:hover { color: var(--text); }
+
+    /* Remember me */
+    .remember-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 0.25rem 0 1.25rem;
+    }
+    .checkbox-label {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.82rem; color: var(--text-2); cursor: pointer;
+    }
+    .checkbox-label input[type="checkbox"] { accent-color: var(--primary); width: 14px; height: 14px; }
+    .forgot-link { font-size: 0.82rem; color: var(--primary); transition: var(--transition); }
+    .forgot-link:hover { color: var(--accent-2); }
+
+    .auth-submit { width: 100%; margin-top: 0.25rem; }
+
+    .auth-divider { 
+      display: flex; align-items: center; gap: 0.75rem; 
+      margin: 1.25rem 0; 
+      font-size: 0.75rem; color: var(--text-3);
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .auth-footer {
+      text-align: center; margin-top: 1.25rem;
+      font-size: 0.83rem; color: var(--text-3);
+    }
+    .auth-footer a { color: var(--primary); font-weight: 600; }
+    .auth-footer a:hover { color: var(--accent-2); }
+
+    /* Error message */
+    .error-msg {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.9rem;
+      font-size: 0.82rem;
+      color: var(--danger);
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .error-msg.show { display: block; animation: fadeInUp 0.25s ease; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">TaskFlow</span>
+    </div>
+
+    <h1 class="auth-heading">Welcome back</h1>
+    <p class="auth-subheading">Sign in to continue to your workspace</p>
+
+    <div class="error-msg" id="error-msg">⚠️ Invalid email or password. Please try again.</div>
+
+    <form id="signin-form" autocomplete="off">
+      <div class="form-field">
+        <label class="form-label" for="email">Email address</label>
+        <input id="email" type="email" placeholder="you@example.com" class="input" autocomplete="email" required>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-wrapper">
+          <input id="password" type="password" placeholder="••••••••" class="input" autocomplete="current-password" required>
+          <button type="button" class="eye-toggle" id="eye-toggle" title="Show/hide password">👁</button>
+        </div>
+      </div>
+
+      <div class="remember-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="remember"> Remember me
+        </label>
+        <a href="#" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg auth-submit" id="signin-btn">Sign In →</button>
+    </form>
+
+    <div class="auth-divider">or</div>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="signup.html">Sign up free</a>
+    </div>
+  </div>
+
+<script>
+  /* Eye toggle */
+  document.getElementById('eye-toggle').addEventListener('click', function() {
+    const pw = document.getElementById('password');
+    if (pw.type === 'password') { pw.type = 'text'; this.textContent = '🙈'; }
+    else { pw.type = 'password'; this.textContent = '👁'; }
+  });
+
+  /* Sign in */
+  document.getElementById('signin-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const errEl    = document.getElementById('error-msg');
+    const btn      = document.getElementById('signin-btn');
+
+    errEl.classList.remove('show');
+    btn.textContent = 'Signing in…';
+    btn.disabled    = true;
+
+    setTimeout(() => {
+      const stored = JSON.parse(localStorage.getItem('user') || 'null');
+      if (stored && stored.email === email && stored.password === password) {
+        if (document.getElementById('remember').checked) {
+          localStorage.setItem('rememberedEmail', email);
+        }
+        btn.textContent = '✓ Success!';
+        setTimeout(() => window.location.href = 'todo.html', 600);
+      } else {
+        errEl.classList.add('show');
+        btn.textContent = 'Sign In →';
+        btn.disabled    = false;
+      }
+    }, 700);
+  });
+
+  /* Prefill if remembered */
+  const remembered = localStorage.getItem('rememberedEmail');
+  if (remembered) {
+    document.getElementById('email').value = remembered;
+    document.getElementById('remember').checked = true;
+  }
+</script>
+</body>
+</html>

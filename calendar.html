@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendar — TaskFlow</title>
+  <meta name="description" content="View and manage your tasks on a monthly calendar. Click any day to see or add tasks.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Calendar layout ── */
+    .cal-layout { display: flex; gap: 1.5rem; align-items: flex-start; }
+    .cal-main   { flex: 1; min-width: 0; }
+    .cal-side   { width: 310px; flex-shrink: 0; }
+
+    /* Nav bar */
+    .cal-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .cal-nav-title {
+      font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em;
+    }
+
+    .cal-nav-btns { display: flex; gap: 0.4rem; }
+
+    /* Header row */
+    .cal-header-row {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 4px; margin-bottom: 4px;
+    }
+
+    .cal-day-name {
+      text-align: center;
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+      padding: 0.4rem 0;
+    }
+
+    /* Grid */
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      padding: 0.4rem;
+      position: relative;
+      transition: var(--transition);
+      display: flex; flex-direction: column;
+      align-items: flex-start;
+      min-height: 56px;
+    }
+
+    .cal-cell:hover { border-color: var(--border-hover); background: var(--surface-2); transform: scale(1.02); }
+
+    .cal-cell.empty { background: transparent; border-color: transparent; cursor: default; }
+    .cal-cell.empty:hover { transform: none; }
+
+    .cal-cell.today {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.25), inset 0 0 16px rgba(99,102,241,0.05);
+    }
+
+    .cal-cell.selected {
+      background: rgba(99,102,241,0.12);
+      border-color: var(--primary);
+    }
+
+    .cal-day-num {
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--text-2);
+      line-height: 1;
+    }
+
+    .cal-cell.today .cal-day-num {
+      color: var(--primary);
+    }
+
+    /* Task dots */
+    .cal-dots {
+      display: flex; gap: 2px; flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .cal-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+
+    .cal-dot.work     { background: #60a5fa; }
+    .cal-dot.personal { background: #34d399; }
+    .cal-dot.urgent   { background: #f87171; }
+    .cal-dot.learning { background: #fbbf24; }
+    .cal-dot.others   { background: #94a3b8; }
+    .cal-dot.default  { background: var(--primary); }
+
+    /* ── Side panel ── */
+    .cal-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .cal-panel-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .cal-panel-date { font-size: 0.95rem; font-weight: 700; }
+    .cal-panel-count { font-size: 0.75rem; color: var(--text-3); }
+
+    .cal-panel-body { padding: 1rem; }
+
+    .cal-panel-add {
+      display: flex; gap: 0.5rem; margin-bottom: 0.75rem;
+    }
+
+    .panel-task-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .panel-task {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.6rem 0.7rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.83rem;
+      transition: var(--transition);
+    }
+
+    .panel-task:hover { border-color: var(--border-hover); }
+
+    .panel-task-check {
+      width: 16px; height: 16px;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+
+    .panel-task-check.done {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-color: transparent;
+    }
+
+    .panel-task-check.done::after { content:'✓'; color:#fff; font-size:0.6rem; font-weight:700; }
+
+    .panel-task-text { flex:1; }
+    .panel-task-text.done { text-decoration: line-through; color: var(--text-3); }
+
+    .panel-empty { text-align:center; padding: 1.5rem 0; color: var(--text-3); font-size: 0.82rem; }
+
+    .cal-no-selection {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-3);
+    }
+
+    .cal-no-selection .icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4; }
+    .cal-no-selection p { font-size: 0.85rem; }
+
+    @media (max-width: 900px) {
+      .cal-layout { flex-direction: column; }
+      .cal-side    { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div id="app-layout" class="app-layout">
+  <main class="main-content">
+
+    <div class="page-header">
+      <h1 class="page-title">📅 Calendar</h1>
+      <p class="page-subtitle">Click any day to view or add tasks.</p>
+    </div>
+
+    <div class="cal-layout">
+      <!-- Calendar -->
+      <div class="cal-main card" style="padding:1.25rem">
+        <div class="cal-nav">
+          <div class="cal-nav-btns">
+            <button class="btn btn-secondary btn-icon" id="prev-btn" onclick="navigate(-1)" title="Previous month">‹</button>
+          </div>
+          <div class="cal-nav-title gradient-text" id="cal-title"></div>
+          <div class="cal-nav-btns">
+            <button class="btn btn-secondary btn-icon" onclick="goToday()">Today</button>
+            <button class="btn btn-secondary btn-icon" id="next-btn" onclick="navigate(1)" title="Next month">›</button>
+          </div>
+        </div>
+
+        <div class="cal-header-row">
+          <div class="cal-day-name">Sun</div>
+          <div class="cal-day-name">Mon</div>
+          <div class="cal-day-name">Tue</div>
+          <div class="cal-day-name">Wed</div>
+          <div class="cal-day-name">Thu</div>
+          <div class="cal-day-name">Fri</div>
+          <div class="cal-day-name">Sat</div>
+        </div>
+
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+
+      <!-- Side Panel -->
+      <div class="cal-side">
+        <div class="cal-panel" id="cal-panel">
+          <div id="panel-no-selection" class="cal-no-selection">
+            <div class="icon">📆</div>
+            <p>Select a day to see<br>and manage tasks</p>
+          </div>
+          <div id="panel-content" class="hidden">
+            <div class="cal-panel-header">
+              <div class="cal-panel-date" id="panel-date-label">—</div>
+              <div class="cal-panel-count" id="panel-task-count">0 tasks</div>
+            </div>
+            <div class="cal-panel-body">
+              <div class="cal-panel-add">
+                <input type="text" id="panel-task-input" placeholder="Add task for this day..." class="input flex-1" style="font-size:0.82rem; padding:0.5rem 0.75rem;">
+                <button onclick="addPanelTask()" class="btn btn-primary btn-sm">Add</button>
+              </div>
+              <div class="panel-task-list" id="panel-task-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="nav.js"></script>
+<script>
+  const today    = new Date();
+  let viewYear   = today.getFullYear();
+  let viewMonth  = today.getMonth();
+  let selectedKey = null;
+
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+
+  /* ── Storage helpers ─────────────────────────────────── */
+  function allTasks()          { return JSON.parse(localStorage.getItem('calendarTasks') || '{}'); }
+  function getDayTasks(key)    { return allTasks()[key] || []; }
+  function setDayTasks(key, t) {
+    const all = allTasks();
+    all[key] = t;
+    localStorage.setItem('calendarTasks', JSON.stringify(all));
+  }
+
+  function dateKey(y, m, d) {
+    return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  /* ── Render calendar ─────────────────────────────────── */
+  function renderCalendar() {
+    document.getElementById('cal-title').textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+    const grid    = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+    const allT    = allTasks();
+
+    const firstDay     = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth  = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const todayKey     = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+    /* Empty cells */
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'cal-cell empty';
+      grid.appendChild(empty);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key  = dateKey(viewYear, viewMonth, d);
+      const tasks = allT[key] || [];
+      const cell  = document.createElement('div');
+
+      let cls = 'cal-cell';
+      if (key === todayKey)     cls += ' today';
+      if (key === selectedKey)  cls += ' selected';
+      cell.className = cls;
+
+      cell.innerHTML = `<span class="cal-day-num">${d}</span>`;
+
+      if (tasks.length) {
+        const dots = document.createElement('div');
+        dots.className = 'cal-dots';
+        tasks.slice(0, 6).forEach(t => {
+          const dot = document.createElement('div');
+          dot.className = 'cal-dot ' + (t.tag || 'default');
+          dots.appendChild(dot);
+        });
+        cell.appendChild(dots);
+      }
+
+      cell.addEventListener('click', () => selectDay(key, d));
+      grid.appendChild(cell);
+    }
+  }
+
+  /* ── Select day ──────────────────────────────────────── */
+  function selectDay(key, day) {
+    selectedKey = key;
+    renderCalendar();
+
+    document.getElementById('panel-no-selection').classList.add('hidden');
+    document.getElementById('panel-content').classList.remove('hidden');
+
+    const [y, m, d] = key.split('-');
+    document.getElementById('panel-date-label').textContent =
+      `${MONTHS[parseInt(m)-1]} ${d}, ${y}`;
+
+    renderPanelTasks();
+  }
+
+  /* ── Panel tasks ─────────────────────────────────────── */
+  function renderPanelTasks() {
+    const tasks = getDayTasks(selectedKey);
+    const list  = document.getElementById('panel-task-list');
+    list.innerHTML = '';
+
+    document.getElementById('panel-task-count').textContent = tasks.length + ' task' + (tasks.length !== 1 ? 's' : '');
+
+    if (tasks.length === 0) {
+      list.innerHTML = '<div class="panel-empty">No tasks for this day.<br>Add one above!</div>';
+      return;
+    }
+
+    tasks.forEach((t, i) => {
+      const el = document.createElement('div');
+      el.className = 'panel-task';
+      el.innerHTML = `
+        <div class="panel-task-check ${t.done ? 'done' : ''}" onclick="togglePanelTask(${i})"></div>
+        <span class="panel-task-text ${t.done ? 'done' : ''}">${escHtml(t.text)}</span>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="deletePanelTask(${i})" title="Delete">🗑</button>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  function addPanelTask() {
+    const input = document.getElementById('panel-task-input');
+    const text  = input.value.trim();
+    if (!text || !selectedKey) return;
+    const tasks = getDayTasks(selectedKey);
+    tasks.push({ text, done: false, tag: 'others' });
+    setDayTasks(selectedKey, tasks);
+    input.value = '';
+    renderPanelTasks();
+    renderCalendar();
+    showToast('Task added for this day!', 'success');
+  }
+
+  function togglePanelTask(i) {
+    const tasks = getDayTasks(selectedKey);
+    tasks[i].done = !tasks[i].done;
+    setDayTasks(selectedKey, tasks);
+    renderPanelTasks();
+  }
+
+  function deletePanelTask(i) {
+    const tasks = getDayTasks(selectedKey);
+    tasks.splice(i, 1);
+    setDayTasks(selectedKey, tasks);
+    renderPanelTasks();
+    renderCalendar();
+  }
+
+  /* ── Navigation ──────────────────────────────────────── */
+  function navigate(dir) {
+    viewMonth += dir;
+    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+    renderCalendar();
+  }
+
+  function goToday() {
+    viewYear  = today.getFullYear();
+    viewMonth = today.getMonth();
+    renderCalendar();
+  }
+
+  /* Enter key in panel input */
+  document.getElementById('panel-task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addPanelTask();
+  });
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  renderCalendar();
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing — TaskFlow</title>
+  <meta name="description" content="Simple, transparent pricing. Start free, upgrade when you're ready.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Pricing page ── */
+    .pricing-hero {
+      text-align: center;
+      padding: 2.5rem 1rem 0;
+      margin-bottom: 2rem;
+    }
+
+    .pricing-hero h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.02em; }
+    .pricing-hero p  { font-size: 1rem; color: var(--text-2); margin: 0.6rem auto 0; max-width: 400px; }
+
+    /* Toggle */
+    .billing-toggle {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.75rem; margin: 1.5rem auto;
+    }
+
+    .billing-label { font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .billing-label.active { color: var(--text); }
+
+    .toggle-switch {
+      position: relative;
+      width: 48px; height: 26px;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 50%;
+      transition: var(--transition);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(22px);
+    }
+
+    .save-badge {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: var(--success);
+      border-radius: 99px;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.72rem; font-weight: 700;
+    }
+
+    /* Cards grid */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      max-width: 1000px; margin: 0 auto;
+    }
+
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.5rem;
+      position: relative;
+      transition: var(--transition);
+      display: flex; flex-direction: column;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .pricing-card.popular {
+      border-color: var(--primary);
+      background: linear-gradient(to bottom, rgba(99,102,241,0.08), var(--surface));
+      box-shadow: 0 0 32px rgba(99,102,241,0.15);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -12px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      border-radius: 99px;
+      padding: 0.25rem 1rem;
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 16px var(--primary-glow);
+      white-space: nowrap;
+    }
+
+    .plan-name  { font-size: 1rem; font-weight: 700; color: var(--text-2); margin-bottom: 0.75rem; }
+    .plan-price {
+      font-size: 2.6rem; font-weight: 900; letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .plan-price sup  { font-size: 1.2rem; font-weight: 700; vertical-align: super; line-height: 0; }
+    .plan-price span { font-size: 1rem; font-weight: 500; color: var(--text-3); }
+    .plan-desc { font-size: 0.82rem; color: var(--text-2); margin: 0.6rem 0 1.25rem; line-height: 1.5; }
+
+    hr.plan-divider { border: none; border-top: 1px solid var(--border); margin: 0 0 1.25rem; }
+
+    .feature-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.75rem; flex: 1; }
+
+    .feature-item {
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      font-size: 0.83rem; color: var(--text-2);
+    }
+
+    .feature-icon { flex-shrink: 0; font-size: 0.9rem; margin-top: 1px; }
+    .feature-item.muted { opacity: 0.4; }
+
+    .plan-btn { width: 100%; }
+
+    /* FAQ section */
+    .faq-section { max-width: 700px; margin: 3rem auto 0; }
+    .faq-section h2 { font-size: 1.3rem; font-weight: 800; text-align: center; margin-bottom: 1.25rem; letter-spacing: -0.01em; }
+
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .faq-q {
+      padding: 1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; font-size: 0.88rem; font-weight: 600;
+      user-select: none;
+    }
+
+    .faq-q:hover { background: var(--surface-2); }
+    .faq-arrow { transition: transform 0.25s; color: var(--text-3); }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      font-size: 0.83rem; color: var(--text-2); line-height: 1.6;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 1.25rem;
+    }
+
+    .faq-item.open .faq-a { max-height: 200px; padding: 0 1.25rem 1rem; }
+  </style>
+</head>
+<body>
+<div id="app-layout" class="app-layout">
+  <main class="main-content">
+
+    <!-- Hero -->
+    <div class="pricing-hero anim-fade-up">
+      <h1>Simple, <span class="gradient-text">transparent</span> pricing</h1>
+      <p>Start free, upgrade when your needs grow. No surprises.</p>
+    </div>
+
+    <!-- Billing Toggle -->
+    <div class="billing-toggle">
+      <span class="billing-label active" id="lbl-monthly">Monthly</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="billing-toggle">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="billing-label" id="lbl-annual">Annual <span class="save-badge">Save 25%</span></span>
+    </div>
+
+    <!-- Pricing Grid -->
+    <div class="pricing-grid">
+
+      <!-- Free -->
+      <div class="pricing-card anim-fade-up">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">$0<span>/mo</span></div>
+        <div class="plan-desc">Perfect for individuals just getting started with task management.</div>
+        <hr class="plan-divider">
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-icon">✅</span> Up to 20 tasks</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Calendar view</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Pomodoro timer</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Quick notes</li>
+          <li class="feature-item muted"><span class="feature-icon">⬜</span> Priority tags</li>
+          <li class="feature-item muted"><span class="feature-icon">⬜</span> Team collaboration</li>
+          <li class="feature-item muted"><span class="feature-icon">⬜</span> Cloud sync</li>
+        </ul>
+        <button class="btn btn-secondary btn-lg plan-btn" data-plan="Free">Get Started</button>
+      </div>
+
+      <!-- Premium (Popular) -->
+      <div class="pricing-card popular anim-fade-up delay-1">
+        <div class="popular-badge">⚡ Most Popular</div>
+        <div class="plan-name" style="color:var(--primary)">Premium</div>
+        <div class="plan-price gradient-text">
+          <sup>$</sup><span id="premium-price" class="gradient-text">9</span><span id="premium-suffix">.99/mo</span>
+        </div>
+        <div class="plan-desc">For power users who want the full TaskFlow experience.</div>
+        <hr class="plan-divider">
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-icon">✅</span> Unlimited tasks</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Calendar view</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Pomodoro timer</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Quick notes</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Priority &amp; tags</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Team collaboration</li>
+          <li class="feature-item muted"><span class="feature-icon">⬜</span> Dedicated support</li>
+        </ul>
+        <button class="btn btn-primary btn-lg plan-btn" data-plan="Premium">Start Free Trial</button>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card anim-fade-up delay-2">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">Custom</div>
+        <div class="plan-desc">For large teams with advanced security and compliance needs.</div>
+        <hr class="plan-divider">
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-icon">✅</span> Everything in Premium</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Unlimited team members</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> SSO / SAML login</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Audit logs</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Dedicated account manager</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> SLA guarantee</li>
+          <li class="feature-item"><span class="feature-icon">✅</span> Priority phone support</li>
+        </ul>
+        <button class="btn btn-secondary btn-lg plan-btn" data-plan="Enterprise">Contact Sales</button>
+      </div>
+
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <h2>Frequently Asked Questions</h2>
+
+      <div class="faq-item">
+        <div class="faq-q">Can I switch plans later? <span class="faq-arrow">▾</span></div>
+        <div class="faq-a">Absolutely! You can upgrade or downgrade your plan at any time from your account settings. No lock-in.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Is the free plan really free? <span class="faq-arrow">▾</span></div>
+        <div class="faq-a">Yes, 100%. No credit card required. The free plan gives you full access to core features with no time limit.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">What happens to my data if I cancel? <span class="faq-arrow">▾</span></div>
+        <div class="faq-a">Your data stays safe. If you cancel Premium, you'll revert to the Free plan but all your existing tasks are preserved.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">How does billing work? <span class="faq-arrow">▾</span></div>
+        <div class="faq-a">Monthly billing is charged on the same day each month. Annual billing is charged once per year at a 25% discount.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="nav.js"></script>
+<script>
+  /* Billing toggle */
+  document.getElementById('billing-toggle').addEventListener('change', function() {
+    const annual = this.checked;
+    document.getElementById('lbl-monthly').classList.toggle('active', !annual);
+    document.getElementById('lbl-annual').classList.toggle('active', annual);
+    document.getElementById('premium-price').textContent  = annual ? '7' : '9';
+    document.getElementById('premium-suffix').textContent = annual ? '.49/mo' : '.99/mo';
+  });
+
+  /* Plan buttons */
+  document.querySelectorAll('.plan-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const plan = btn.dataset.plan;
+      if (plan === 'Enterprise') {
+        showToast('Contact us at hello@taskflow.app 📧', 'info');
+      } else {
+        window.location.href = `signup.html?plan=${encodeURIComponent(plan)}`;
+      }
+    });
+  });
+
+  /* FAQ accordion */
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+</script>
+</body>
+</html>

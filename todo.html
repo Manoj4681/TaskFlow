@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks — TaskFlow</title>
+  <meta name="description" content="Manage your tasks with priorities, tags, due dates, and a built-in Pomodoro timer.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Todo-page layout ── */
+    .todo-layout {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    /* Left: main task area */
+    .todo-main { flex: 1; min-width: 0; }
+
+    /* Right: side panel */
+    .todo-side {
+      width: 300px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Add task bar ── */
+    .add-task-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .add-task-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+
+    .add-task-options {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+    }
+
+    /* ── Task card ── */
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      transition: var(--transition);
+      animation: slideTaskIn 0.25s ease both;
+    }
+
+    @keyframes slideTaskIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-card:hover { border-color: var(--border-hover); background: var(--surface-2); }
+    .task-card.done  { opacity: 0.6; }
+
+    .task-check {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+      margin-top: 1px;
+    }
+
+    .task-check.checked {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-color: transparent;
+    }
+
+    .task-check.checked::after { content: '✓'; color: #fff; font-size: 0.75rem; font-weight: 700; }
+
+    .task-body { flex: 1; min-width: 0; }
+
+    .task-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      word-break: break-word;
+      transition: var(--transition);
+    }
+
+    .task-text.done { text-decoration: line-through; color: var(--text-3); }
+
+    .task-meta {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-top: 0.35rem; flex-wrap: wrap;
+    }
+
+    .task-date { font-size: 0.72rem; color: var(--text-3); }
+    .task-date.overdue { color: var(--danger); }
+
+    .task-actions {
+      display: flex; align-items: center; gap: 0.25rem;
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .task-card:hover .task-actions { opacity: 1; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex; gap: 0.5rem; align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .filter-chip {
+      padding: 0.3rem 0.8rem;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-2);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .filter-chip:hover { border-color: var(--border-hover); color: var(--text); }
+    .filter-chip.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.3); color: var(--primary); }
+
+    /* ── Task list ── */
+    #task-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    /* ── Pomodoro ── */
+    .pomodoro-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .pom-ring-wrap {
+      position: relative;
+      width: 120px; height: 120px;
+      margin: 1rem auto;
+    }
+
+    .pom-ring-svg { width: 120px; height: 120px; transform: rotate(-90deg); }
+
+    .pom-track { fill: none; stroke: var(--surface-2); stroke-width: 8; }
+    .pom-fill  { fill: none; stroke: url(#pomGrad); stroke-width: 8;
+                 stroke-linecap: round;
+                 stroke-dasharray: 339.3;
+                 stroke-dashoffset: 0;
+                 transition: stroke-dashoffset 1s linear; }
+
+    .pom-time {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;
+    }
+
+    .pom-label { font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+    .pom-mode-btns { display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 0.75rem; }
+    .pom-ctrl-btns { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; }
+
+    /* ── Quick Notes ── */
+    .notes-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .notes-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .notes-saved  { font-size: 0.7rem; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+    .notes-saved.show { opacity: 1; }
+
+    #quick-notes {
+      width: 100%; min-height: 100px; max-height: 200px;
+      resize: vertical;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 0.6rem 0.75rem;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    #quick-notes:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+
+    /* ── Progress section ── */
+    .progress-section { margin-bottom: 1.25rem; }
+    .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .progress-label { font-size: 0.78rem; color: var(--text-2); font-weight: 500; }
+    .progress-pct   { font-size: 0.78rem; font-weight: 700; color: var(--primary); }
+
+    /* ── Section header ── */
+    .tasks-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .tasks-count {
+      font-size: 0.8rem; color: var(--text-3);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.15rem 0.6rem;
+    }
+
+    /* ── Alarm card ── */
+    .alarm-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+
+    .alarm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+
+    .alarm-perm-btn {
+      font-size: 0.72rem; padding: 0.25rem 0.6rem;
+      border-radius: 99px;
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.25);
+      color: var(--primary); cursor: pointer;
+      transition: var(--transition);
+    }
+    .alarm-perm-btn:hover { background: rgba(99,102,241,0.2); }
+    .alarm-perm-btn.granted { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); color: var(--success); cursor: default; }
+
+    .upcoming-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .upcoming-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.6rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      transition: var(--transition);
+    }
+    .upcoming-item:hover { border-color: var(--border-hover); }
+    .upcoming-time { font-weight: 700; color: var(--primary); flex-shrink: 0; }
+    .upcoming-text { flex: 1; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .upcoming-del  { color: var(--text-3); cursor: pointer; flex-shrink: 0; transition: var(--transition); font-size: 0.85rem; }
+    .upcoming-del:hover { color: var(--danger); }
+
+    .alarm-empty { font-size: 0.78rem; color: var(--text-3); text-align: center; padding: 0.75rem 0; }
+
+    /* Bell icon on task cards */
+    .task-alarm-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 0.7rem; color: var(--warning);
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 99px;
+      padding: 0.1rem 0.45rem;
+    }
+
+    /* Ringing animation on fired alarm toast */
+    @keyframes ring {
+      0%,100% { transform: rotate(0); }
+      10%,30%,50%,70%,90% { transform: rotate(-12deg); }
+      20%,40%,60%,80%     { transform: rotate(12deg); }
+    }
+    .ringing { animation: ring 0.6s ease 3; display: inline-block; }
+
+    @media (max-width: 900px) {
+      .todo-layout { flex-direction: column; }
+      .todo-side   { width: 100%; }
+      .stats-row   { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .stats-row   { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div id="app-layout" class="app-layout">
+  <main class="main-content">
+
+    <!-- Page Header -->
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">My Tasks</h1>
+        <p class="page-subtitle">Stay focused. Stay organized.</p>
+      </div>
+      <div class="flex gap-2">
+        <select id="sort-tasks" class="select" style="width:auto">
+          <option value="date">Sort: Date</option>
+          <option value="priority">Sort: Priority</option>
+          <option value="alpha">Sort: A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">📋</div>
+        <div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">Total Tasks</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-green">✅</div>
+        <div>
+          <div class="stat-value" id="stat-done">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-amber">⏳</div>
+        <div>
+          <div class="stat-value" id="stat-pending">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-red">🔥</div>
+        <div>
+          <div class="stat-value" id="stat-overdue">0</div>
+          <div class="stat-label">Overdue</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="todo-layout">
+      <!-- Main Column -->
+      <div class="todo-main">
+
+        <!-- Add Task Bar -->
+        <div class="add-task-bar">
+          <div class="add-task-row">
+            <input id="task-input" type="text" placeholder="What needs to be done?" class="input flex-1" autocomplete="off">
+            <button onclick="addTask()" class="btn btn-primary" id="add-btn">+ Add Task</button>
+          </div>
+          <div class="add-task-options">
+            <select id="tag-select" class="select" style="width:auto; padding: 0.4rem 0.7rem; font-size:0.8rem;">
+              <option value="others">🏷 Tag</option>
+              <option value="work">💼 Work</option>
+              <option value="personal">🏠 Personal</option>
+              <option value="urgent">🔥 Urgent</option>
+              <option value="learning">📚 Learning</option>
+              <option value="others">📦 Others</option>
+            </select>
+            <select id="priority-select" class="select" style="width:auto; padding: 0.4rem 0.7rem; font-size:0.8rem;">
+              <option value="medium">🟡 Priority</option>
+              <option value="high">🔴 High</option>
+              <option value="medium">🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+            <input id="due-date" type="date" class="input" style="width:auto; padding: 0.4rem 0.7rem; font-size:0.8rem;">
+            <input id="alarm-time" type="time" class="input" title="Set alarm time" style="width:auto; padding: 0.4rem 0.7rem; font-size:0.8rem;" placeholder="⏰ Alarm">
+            <span style="font-size:0.75rem; color:var(--text-3); align-self:center;">⏰</span>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-section">
+          <div class="progress-row">
+            <span class="progress-label">Overall Progress</span>
+            <span class="progress-pct" id="progress-pct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <input id="search" type="text" placeholder="🔍 Search tasks..." class="input" style="width:200px; padding:0.4rem 0.75rem; font-size:0.82rem;">
+          <div class="flex gap-1 flex-wrap">
+            <span class="filter-chip active" data-status="all">All</span>
+            <span class="filter-chip" data-status="pending">Pending</span>
+            <span class="filter-chip" data-status="done">Done</span>
+          </div>
+          <div class="flex gap-1 flex-wrap">
+            <span class="filter-chip active" data-tag="all">All Tags</span>
+            <span class="filter-chip" data-tag="work">Work</span>
+            <span class="filter-chip" data-tag="personal">Personal</span>
+            <span class="filter-chip" data-tag="urgent">Urgent</span>
+            <span class="filter-chip" data-tag="learning">Learning</span>
+          </div>
+        </div>
+
+        <!-- Task List -->
+        <div class="tasks-header">
+          <span class="section-title" style="margin:0">Tasks</span>
+          <span class="tasks-count" id="tasks-count">0 tasks</span>
+        </div>
+
+        <div id="task-list"></div>
+
+      </div>
+
+      <!-- Side Panel -->
+      <div class="todo-side">
+
+        <!-- Pomodoro Timer -->
+        <div class="pomodoro-card card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-sm">🍅 Pomodoro</span>
+            <span class="pom-label" id="pom-mode-label">Focus</span>
+          </div>
+
+          <div class="pom-mode-btns">
+            <button class="filter-chip active" id="btn-focus"  onclick="setMode('focus')">Focus 25m</button>
+            <button class="filter-chip"        id="btn-short"  onclick="setMode('short')">Short 5m</button>
+            <button class="filter-chip"        id="btn-long"   onclick="setMode('long')">Long 15m</button>
+          </div>
+
+          <div class="pom-ring-wrap">
+            <svg class="pom-ring-svg" viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="pomGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+              <circle class="pom-track" cx="60" cy="60" r="54"/>
+              <circle class="pom-fill"  cx="60" cy="60" r="54" id="pom-ring"/>
+            </svg>
+            <div class="pom-time" id="pom-display">25:00</div>
+          </div>
+
+          <div class="pom-ctrl-btns">
+            <button class="btn btn-success btn-sm" id="pom-start" onclick="pomStart()">▶ Start</button>
+            <button class="btn btn-secondary btn-sm" onclick="pomReset()">↺ Reset</button>
+          </div>
+          <div class="text-xs text-muted mt-2" id="pom-sessions" style="text-align:center"></div>
+        </div>
+
+        <!-- Alarm / Reminder Panel -->
+        <div class="alarm-card">
+          <div class="alarm-header">
+            <span class="font-bold text-sm">🔔 Alarms</span>
+            <button class="alarm-perm-btn" id="perm-btn" onclick="requestNotifPerm()">Enable Alerts</button>
+          </div>
+          <div class="upcoming-list" id="upcoming-list">
+            <div class="alarm-empty">No alarms set.<br>Add an alarm time when creating a task.</div>
+          </div>
+        </div>
+
+        <!-- Quick Notes -->
+        <div class="notes-card">
+          <div class="notes-header">
+            <span class="font-bold text-sm">📝 Quick Notes</span>
+            <span class="notes-saved" id="notes-saved">✓ Saved</span>
+          </div>
+          <textarea id="quick-notes" placeholder="Jot something down..."></textarea>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="nav.js"></script>
+<script>
+  /* ── State ─────────────────────────────────────────────── */
+  let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  let activeStatus = 'all';
+  let activeTag    = 'all';
+
+  /* ── Save / Load ─────────────────────────────────────── */
+  function saveTasks() { localStorage.setItem('tasks', JSON.stringify(tasks)); }
+
+  /* ── Render ──────────────────────────────────────────── */
+  function renderTasks() {
+    const list      = document.getElementById('task-list');
+    const searchVal = document.getElementById('search').value.toLowerCase();
+    const sort      = document.getElementById('sort-tasks').value;
+    const today     = new Date().toISOString().split('T')[0];
+
+    let filtered = tasks.filter(t =>
+      t.text.toLowerCase().includes(searchVal) &&
+      (activeStatus === 'all' || (activeStatus === 'done' ? t.done : !t.done)) &&
+      (activeTag === 'all' || t.tag === activeTag)
+    );
+
+    if (sort === 'alpha')    filtered.sort((a, b) => a.text.localeCompare(b.text));
+    if (sort === 'priority') filtered.sort((a, b) => priorityVal(b.priority) - priorityVal(a.priority));
+    if (sort === 'date')     filtered.sort((a, b) => (a.due || '9') > (b.due || '9') ? 1 : -1);
+
+    list.innerHTML = '';
+
+    if (filtered.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <div class="empty-state-title">No tasks here</div>
+          <div class="empty-state-desc">Add your first task above to get started!</div>
+        </div>`;
+    } else {
+      filtered.forEach(task => {
+        const idx      = tasks.indexOf(task);
+        const isOverdue = task.due && task.due < today && !task.done;
+        const card      = document.createElement('div');
+        card.className  = 'task-card' + (task.done ? ' done' : '');
+        card.innerHTML = `
+          <div class="task-check ${task.done ? 'checked' : ''}" onclick="toggleDone(${idx})"></div>
+          <div class="task-body">
+            <div class="task-text ${task.done ? 'done' : ''}">${escHtml(task.text)}</div>
+            <div class="task-meta">
+              <div class="priority-dot priority-${task.priority || 'medium'}"></div>
+              <span class="badge badge-${task.tag || 'others'}">${tagLabel(task.tag)}</span>
+              ${task.due ? `<span class="task-date ${isOverdue ? 'overdue' : ''}">📅 ${formatDate(task.due)}${isOverdue ? ' · Overdue' : ''}</span>` : ''}
+              ${task.alarm && !task.alarmFired && !task.done ? `<span class="task-alarm-badge">⏰ ${task.alarm}</span>` : ''}
+              ${task.alarm && task.alarmFired ? `<span class="task-alarm-badge" style="color:var(--text-3);opacity:0.5">🔕 ${task.alarm}</span>` : ''}
+            </div>
+          </div>
+          <div class="task-actions">
+            ${task.alarm && !task.done ? `<button class="btn btn-ghost btn-icon btn-sm" onclick="clearAlarm(${idx})" title="Remove alarm">🔕</button>` : ''}
+            <button class="btn btn-ghost btn-icon" onclick="deleteTask(${idx})" title="Delete">🗑</button>
+          </div>`;
+        list.appendChild(card);
+      });
+    }
+
+    /* Stats */
+    const total   = tasks.length;
+    const done    = tasks.filter(t => t.done).length;
+    const pending = tasks.filter(t => !t.done).length;
+    const overdue = tasks.filter(t => t.due && t.due < today && !t.done).length;
+    const pct     = total ? Math.round((done / total) * 100) : 0;
+
+    document.getElementById('stat-total').textContent   = total;
+    document.getElementById('stat-done').textContent    = done;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-overdue').textContent = overdue;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('tasks-count').textContent  = filtered.length + ' task' + (filtered.length !== 1 ? 's' : '');
+  }
+
+  /* ── CRUD ─────────────────────────────────────────────── */
+  function addTask() {
+    const input = document.getElementById('task-input');
+    const text  = input.value.trim();
+    if (!text) { input.focus(); return; }
+    const alarmTime = document.getElementById('alarm-time').value || null;
+    tasks.unshift({
+      text,
+      done:     false,
+      tag:      document.getElementById('tag-select').value,
+      priority: document.getElementById('priority-select').value,
+      due:      document.getElementById('due-date').value || null,
+      alarm:    alarmTime,
+      alarmDate: alarmTime ? (document.getElementById('due-date').value || new Date().toISOString().split('T')[0]) : null,
+      alarmFired: false,
+      id:       Date.now()
+    });
+    input.value = '';
+    document.getElementById('alarm-time').value = '';
+    saveTasks();
+    showToast(alarmTime ? `Task added! Alarm set for ${alarmTime} ⏰` : 'Task added!', 'success');
+    renderTasks();
+    renderUpcoming();
+  }
+
+  function toggleDone(idx) {
+    tasks[idx].done = !tasks[idx].done;
+    saveTasks();
+    if (tasks[idx].done) showToast('Task completed! 🎉', 'success');
+    renderTasks();
+  }
+
+  function deleteTask(idx) {
+    tasks.splice(idx, 1);
+    saveTasks();
+    showToast('Task deleted', 'info');
+    renderTasks();
+  }
+
+  /* ── Filters ──────────────────────────────────────────── */
+  document.querySelectorAll('[data-status]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('[data-status]').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeStatus = chip.dataset.status;
+      renderTasks();
+    });
+  });
+
+  document.querySelectorAll('[data-tag]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('[data-tag]').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeTag = chip.dataset.tag;
+      renderTasks();
+    });
+  });
+
+  document.getElementById('search').addEventListener('input', renderTasks);
+  document.getElementById('sort-tasks').addEventListener('change', renderTasks);
+
+  /* Enter key */
+  document.getElementById('task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  /* ── Pomodoro ─────────────────────────────────────────── */
+  const POM_MODES = { focus: 25*60, short: 5*60, long: 15*60 };
+  let pomMode     = 'focus';
+  let pomTime     = POM_MODES.focus;
+  let pomTotal    = POM_MODES.focus;
+  let pomInterval = null;
+  let pomRunning  = false;
+  let pomSessions = 0;
+  const CIRCUMFERENCE = 2 * Math.PI * 54; // 339.3
+
+  function setMode(mode) {
+    pomMode  = mode;
+    pomTime  = POM_MODES[mode];
+    pomTotal = POM_MODES[mode];
+    pomRunning = false;
+    clearInterval(pomInterval);
+    document.getElementById('pom-start').textContent = '▶ Start';
+    document.querySelectorAll('.pom-mode-btns .filter-chip').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + mode).classList.add('active');
+    document.getElementById('pom-mode-label').textContent = mode === 'focus' ? 'Focus' : mode === 'short' ? 'Short Break' : 'Long Break';
+    updatePomDisplay();
+  }
+
+  function pomStart() {
+    if (pomRunning) {
+      clearInterval(pomInterval);
+      pomRunning = false;
+      document.getElementById('pom-start').textContent = '▶ Start';
+    } else {
+      pomRunning = true;
+      document.getElementById('pom-start').textContent = '⏸ Pause';
+      pomInterval = setInterval(() => {
+        pomTime--;
+        updatePomDisplay();
+        if (pomTime <= 0) {
+          clearInterval(pomInterval);
+          pomRunning = false;
+          document.getElementById('pom-start').textContent = '▶ Start';
+          if (pomMode === 'focus') {
+            pomSessions++;
+            document.getElementById('pom-sessions').textContent = `🍅 ${pomSessions} session${pomSessions > 1 ? 's' : ''} completed`;
+            showToast('Pomodoro done! Time for a break 🎉', 'success');
+          } else {
+            showToast('Break over! Back to work 💪', 'info');
+          }
+          pomTime = pomTotal;
+          updatePomDisplay();
+        }
+      }, 1000);
+    }
+  }
+
+  function pomReset() {
+    clearInterval(pomInterval);
+    pomRunning = false;
+    pomTime    = pomTotal;
+    document.getElementById('pom-start').textContent = '▶ Start';
+    updatePomDisplay();
+  }
+
+  function updatePomDisplay() {
+    const m  = String(Math.floor(pomTime / 60)).padStart(2, '0');
+    const s  = String(pomTime % 60).padStart(2, '0');
+    document.getElementById('pom-display').textContent = `${m}:${s}`;
+    const offset = CIRCUMFERENCE * (1 - pomTime / pomTotal);
+    document.getElementById('pom-ring').style.strokeDashoffset = offset;
+  }
+
+  /* ── Quick Notes ─────────────────────────────────────── */
+  const notesEl  = document.getElementById('quick-notes');
+  const savedEl  = document.getElementById('notes-saved');
+  notesEl.value  = localStorage.getItem('quickNotes') || '';
+  let notesTimer;
+  notesEl.addEventListener('input', e => {
+    localStorage.setItem('quickNotes', e.target.value);
+    savedEl.classList.remove('show');
+    clearTimeout(notesTimer);
+    notesTimer = setTimeout(() => savedEl.classList.add('show'), 600);
+  });
+
+  /* ── Helpers ─────────────────────────────────────────── */
+  function priorityVal(p) { return p === 'high' ? 3 : p === 'medium' ? 2 : 1; }
+
+  function tagLabel(tag) {
+    const map = { work:'💼 Work', personal:'🏠 Personal', urgent:'🔥 Urgent', learning:'📚 Learning', others:'📦 Others' };
+    return map[tag] || tag || 'Others';
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    const [y,m,day] = d.split('-');
+    return `${day}/${m}/${y}`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Clear alarm from task ──────────────────────────── */
+  function clearAlarm(idx) {
+    tasks[idx].alarm      = null;
+    tasks[idx].alarmDate  = null;
+    tasks[idx].alarmFired = false;
+    saveTasks();
+    showToast('Alarm removed', 'info');
+    renderTasks();
+    renderUpcoming();
+  }
+
+  /* ══════════════════════════════════════════════════════
+     ALARM SYSTEM
+  ══════════════════════════════════════════════════════ */
+
+  /* Request browser notification permission */
+  function requestNotifPerm() {
+    if (!('Notification' in window)) {
+      showToast('Browser notifications not supported', 'error');
+      return;
+    }
+    Notification.requestPermission().then(perm => {
+      updatePermBtn();
+      if (perm === 'granted') showToast('Notifications enabled! ✅', 'success');
+      else showToast('Notifications blocked. Alarms will still beep!', 'warning');
+    });
+  }
+
+  function updatePermBtn() {
+    const btn = document.getElementById('perm-btn');
+    if (!btn) return;
+    if (Notification.permission === 'granted') {
+      btn.textContent = '✓ Enabled';
+      btn.classList.add('granted');
+    } else {
+      btn.textContent = 'Enable Alerts';
+      btn.classList.remove('granted');
+    }
+  }
+
+  /* Render upcoming alarms panel */
+  function renderUpcoming() {
+    const list = document.getElementById('upcoming-list');
+    const alarms = tasks.filter(t => t.alarm && !t.alarmFired && !t.done)
+                        .sort((a, b) => a.alarm > b.alarm ? 1 : -1);
+    if (alarms.length === 0) {
+      list.innerHTML = '<div class="alarm-empty">No alarms set.<br>Add an alarm time when creating a task.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    alarms.forEach(t => {
+      const idx = tasks.indexOf(t);
+      const item = document.createElement('div');
+      item.className = 'upcoming-item';
+      item.innerHTML = `
+        <span class="upcoming-time">${t.alarm}</span>
+        <span class="upcoming-text">${escHtml(t.text)}</span>
+        <span class="upcoming-del" onclick="clearAlarm(${idx})" title="Remove alarm">✕</span>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  /* Web Audio beep — no external file needed */
+  function playAlarmBeep() {
+    try {
+      const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+      const play = (freq, start, dur) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + dur);
+      };
+      play(880, 0.0, 0.18);
+      play(880, 0.2, 0.18);
+      play(1100, 0.4, 0.28);
+    } catch(e) { /* audio blocked, silent fallback */ }
+  }
+
+  /* Fire alarm — notification + beep + toast */
+  function fireAlarm(task, idx) {
+    tasks[idx].alarmFired = true;
+    saveTasks();
+    playAlarmBeep();
+
+    /* Browser notification */
+    if (Notification.permission === 'granted') {
+      new Notification('⏰ TaskFlow Alarm', {
+        body: task.text,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text y="28" font-size="28">⚡</text></svg>'
+      });
+    }
+
+    /* Big toast */
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-warning';
+    toast.style.cssText = 'min-width:300px; border-left:3px solid #f59e0b; cursor:pointer;';
+    toast.innerHTML = `
+      <span class="toast-icon ringing">⏰</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.85rem">Alarm!</div>
+        <div style="font-size:0.8rem;color:var(--text-2)">${escHtml(task.text)}</div>
+      </div>
+      <span style="font-size:0.75rem;color:var(--text-3)">tap to dismiss</span>
+    `;
+    toast.addEventListener('click', () => toast.remove());
+    container.appendChild(toast);
+    setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 8000);
+
+    renderTasks();
+    renderUpcoming();
+  }
+
+  /* Check alarms every 10 seconds */
+  function checkAlarms() {
+    const now      = new Date();
+    const nowDate  = now.toISOString().split('T')[0];
+    const nowHHMM  = now.toTimeString().slice(0,5); // "HH:MM"
+
+    tasks.forEach((t, idx) => {
+      if (!t.alarm || t.alarmFired || t.done) return;
+      const alarmDate = t.alarmDate || nowDate;
+      if (alarmDate === nowDate && t.alarm === nowHHMM) {
+        fireAlarm(t, idx);
+      }
+    });
+  }
+
+  /* ── Init ─────────────────────────────────────────────── */
+  updatePomDisplay();
+  renderTasks();
+  renderUpcoming();
+  updatePermBtn();
+  setInterval(checkAlarms, 10000); // check every 10s
+  checkAlarms(); // check immediately on load
+</script>
+</body>
+</html>
