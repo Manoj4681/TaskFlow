@@ -2,7 +2,7 @@
 
 An interactive, premium dark-themed productivity dashboard that combines structured task planning, a Pomodoro focus engine, monthly scheduling, and custom alarms into a unified client-side interface.
 
-Designed as a **local-first client-side workspace**, TaskFlow executes entirely within your browser to deliver zero server latency and complete data privacy with no installation required.
+A unified productivity workspace that seamlessly integrates intelligent task management, calendar planning, focus sessions, progress tracking, and a premium user experience to help individuals and teams work smarter and achieve more.
 
 ---
 
