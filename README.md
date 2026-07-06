@@ -45,3 +45,9 @@ This project is a **serverless application** that runs entirely in the browser w
 
 <details>
 <summary>📁 File Directory</summary>
+TaskFlow/ │ ├── index.html 🏠 Landing / Home portal ├── todo.html ✅ Deep Work Workspace ├── calendar.html 📅 Monthly Calendar planner ├── signin.html 🔑 Sign In portal ├── signup.html 🚀 Sign Up portal ├── about.html ℹ️ Mission & Story view ├── pricing.html 💎 Pricing tiers & FAQ │ ├── style.css 🎨 Centralized Design System └── nav.js 🔗 Shared Sidebar Navigation & Toast system
+
+
+
+
+</details>
