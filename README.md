@@ -43,4 +43,5 @@ This project is a **serverless application** that runs entirely in the browser w
 
 ---
 
-## 📂 File Directory
+<details>
+<summary>📁 File Directory</summary>
