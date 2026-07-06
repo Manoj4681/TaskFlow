@@ -14,13 +14,13 @@ This project is a **serverless application** that runs entirely in the browser w
 ## 📷 Screenshots
 
 ### Main Workspace View
-![Main Dashboard](screenshot-tasks.png)
+![Main Dashboard](MyTasks-TaskFlow%20(2).png)
 
 ### Landing Page
-![Landing Page](screenshot-home.png)
+![Landing Page](TaskFlow-Home%20Page.png)
 
 ### Sign In Portal
-![Sign In Portal](screenshot-signin.png)
+![Sign In Portal](SignIn-TaskFlow.png)
 
 ---
 
